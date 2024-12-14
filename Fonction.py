@@ -113,7 +113,6 @@ def bellmanford(n, source, capacite, cout, flot):
     return dist, parent
 
 
-
 def bfs(graphe, sommet_initial, sommet_arrivee, predecesseur):  
     visités = [False] * len(graphe)  # Marque les sommets visités
     file = deque([sommet_initial])   # File initialisée avec le sommet source
@@ -159,6 +158,111 @@ def ford_fulkerson(graphe, sommet_initial, sommet_arrivee):
 
     return flot_max  # Retourne le flot maximal
 
+
+# Algorithme Pousser-Réétiqueter
+
+# Initialisation
+
+def initialiser_matrice(matrice):
+
+    # Initialiser les hauteurs, excédents et flots à 0
+    n = len(matrice) 
+    hauteur = [0] * n 
+    excedent = [0] * n 
+    flots = [[0] * n for _ in range(n)]
+
+    source = 0              # La source est le sommet 0
+    hauteur[source] = n     # La hauteur de la source est égale au nombre de sommets
+
+    # Initialiser les flots sortant de la source
+    for v in range(n):
+        if matrice[source][v] > 0:
+            flots[source][v] = matrice[source][v] 
+            excedent[v] += matrice[source][v] 
+            excedent[source] -= matrice[source][v] 
+
+    return hauteur, excedent, flots
+
+# Pousser
+
+def pousser(u, v, matrice, flots, excedent):
+
+    # Calcul de la capacité résiduelle
+    capacite_residuelle = matrice[u][v] - flots[u][v]
+
+    # Calcul du flot à pousser (le minimum entre l'excédent de u et la capacité résiduelle)
+    flux = min(excedent[u], capacite_residuelle)
+
+    # Mise à jour des flots et des excédants
+    flots[u][v] += flux
+    flots[v][u] -= flux
+    excedent[u] -= flux
+    excedent[v] += flux
+
+# Réétiqueter 
+
+def reetiqueter(u, matrice, flots, hauteur):
+
+    n = len(matrice)
+    hauteur_min = float('inf')
+
+    # Trouver la hauteur minimale parmi les voisins accessibles
+    for v in range(n):
+        if matrice[u][v] - flots[u][v] > 0:  # Capacité résiduelle positive
+            hauteur_min = min(hauteur_min, hauteur[v])
+
+    # Mettre à jour la hauteur de u
+    if hauteur_min < float('inf'):
+        hauteur[u] = hauteur_min + 1
+
+# Réalisation de l'algorithme pousser-réétiqueter
+
+def algorithme_pousser_reetiqueter(matrice):
+
+    n = len(matrice)    # Nombre de sommets
+    source = 0
+    puits = n - 1
+
+    # Initialisation
+    hauteur, excedent, flots = initialiser_matrice(matrice)
+
+    # Liste des sommets excédentaires (hors source et puits)
+    sommets_excedentaires = [i for i in range(n) if i != source and i != puits and excedent[i] > 0]
+
+    while sommets_excedentaires:
+        
+        # Trier les sommets excédentaires par priorité : hauteur décroissante puis indice croissant
+        sommets_excedentaires.sort(key=lambda x: (-hauteur[x], x))
+        u = sommets_excedentaires.pop(0)    # Prendre le sommet avec la plus grande priorité
+        action_effectuee = False
+
+        # Obtenir les voisins triés avec priorité pour pousser
+        voisins = list(range(n))
+        voisins.sort(key=lambda v: (v != puits, v))     # Priorité des opérations dans l’algorithme Pousser-réétiqueter
+
+        # Pousser le flot vers les voisins si possible
+        for v in voisins:
+            if matrice[u][v] - flots[u][v] > 0 and hauteur[u] > hauteur[v]:     # Capacité résiduelle et condition de hauteur
+                pousser_matrice(u, v, matrice, flots, excedent)
+                action_effectuee = True
+
+                # Ajouter v aux sommets excédentaires s'il devient excédentaire
+                if excedent[v] > 0 and v not in sommets_excedentaires and v != source and v != puits:
+                    sommets_excedentaires.append(v)
+                break # Sortie de la boucle
+
+        # Réétiqueter si aucune poussée n'est possible
+        if not action_effectuee:
+            reetiqueter_matrice(u, matrice, flots, hauteur)
+            sommets_excedentaires.append(u)     # Réajouter u après réétiquetage
+
+    # Calculer le flot maximal
+    flot_max = sum(flots[source][v] for v in range(n))
+
+    #affichage de la valeur maximale du flot et de la matrice des flots
+    return flot_max, flots
+
+# Algorithme pour résoudre le flot à coût minimal.
 
 def flot_min_cout(n, capacite, cout, source, arrivee):
     """
@@ -230,3 +334,4 @@ def flot_min_cout(n, capacite, cout, source, arrivee):
     print("===========================")
 
     return flot_actuel, cout_total
+
