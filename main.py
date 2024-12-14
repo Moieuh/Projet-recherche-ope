@@ -15,7 +15,9 @@ if m_cap is not None and m_cout is not None:
 
     print("\nExécution de l'algorithme de Bellman-Ford :")
     dist, parent = bellmanford(n, source, m_cap, m_cout, flot)
-
+    print("\n Exécution de l'algorithme de Ford : ")
+    flot = ford_fulkerson(m_cap, source, arrivee)
+    print("Le flot maximum de la source", source, "au puits", arrivee, "est :", flot)
     print("\nRésultats finaux :")
     print(f"Distances : {dist}")
     print(f"Parents   : {parent}")
