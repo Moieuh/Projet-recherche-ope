@@ -217,6 +217,8 @@ def reetiqueter(u, matrice, flots, hauteur):
 
 # Réalisation de l'algorithme pousser-réétiqueter
 
+
+
 def algorithme_pousser_reetiqueter(matrice):
 
     n = len(matrice)    # Nombre de sommets
@@ -242,7 +244,7 @@ def algorithme_pousser_reetiqueter(matrice):
 
         # Pousser le flot vers les voisins si possible
         for v in voisins:
-            if matrice[u][v] - flots[u][v] > 0 and hauteur[u] > hauteur[v]:     # Capacité résiduelle et condition de hauteur
+            if matrice[u][v] - flots[u][v] > 0 and hauteur[u] == hauteurs[v]+1:     # Capacité résiduelle et condition de hauteur
                 pousser_matrice(u, v, matrice, flots, excedent)
                 action_effectuee = True
 
@@ -254,7 +256,9 @@ def algorithme_pousser_reetiqueter(matrice):
         # Réétiqueter si aucune poussée n'est possible
         if not action_effectuee:
             reetiqueter_matrice(u, matrice, flots, hauteur)
-            sommets_excedentaires.append(u)     # Réajouter u après réétiquetage
+
+        
+
 
     # Calculer le flot maximal
     flot_max = sum(flots[source][v] for v in range(n))
