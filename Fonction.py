@@ -5,74 +5,71 @@ def choisir_Test():
     print(fichier)
     return fichier
 
-def lecture_flot(chemin_fichier):
-    # Lit un fichier contenant une matrice de capacités et retourne la matrice
+def matrice_capaciter(chemin_fichier):
     try:
         with open(chemin_fichier, 'r') as file:
             lines = file.readlines()
-            n = int(lines[0].strip())  # Lit le nombre de noeuds
-            capacity_matrix = [list(map(int, line.split())) for line in lines[1:]]  # Lit la matrice ligne par ligne
-            return capacity_matrix
+            n = int(lines[0].strip())  # Nombre de lignes et colonnes à conserver
+
+            # Transformation en une matrice d'entiers
+            matrice_complete = [
+                [int(val) for val in line.split()]
+                for line in lines[1:]
+            ]
+
+            # Tronquer la matrice à n lignes et n colonnes
+            matrice_capaciter = [ligne[:n] for ligne in matrice_complete[:n]]
+
+            # Affichage de la matrice tronquée avec s, alphabet, et t
+            print("\nVoici la matrice de capaciter:")
+            print_matrice(matrice_capaciter)
+
     except Exception as e:
-        # Gère les erreurs de lecture de fichier
-        print(f"Erreur de lecture du fichier {chemin_fichier} : {e}")
-        return None
+        print(f"Erreur lors de la lecture ou du traitement du fichier {chemin_fichier} : {e}")
 
-def afficher_matrice(matrice, titre):
-    # Affiche une matrice avec un titre donné
-    print(titre)
-    max_len = max(len(f"{val:.2f}" if isinstance(val, float) else f"{val}") for row in matrice for val in row)  # Calcule la largeur maximale pour aligner les colonnes
-    for ligne in matrice:
-        print(" ".join(f"{val:>{max_len}.2f}" if isinstance(val, float) else f"{val:>{max_len}}" for val in ligne))  # Affiche chaque ligne avec un alignement
-    print()
+def matrice_cout(chemin_fichier):
+    try:
+        with open(chemin_fichier, 'r') as file:
+            lines = file.readlines()
+            n = int(lines[0].strip())  # Nombre de lignes pour la première matrice
 
-def afficher_matrice_capacites(capacity_matrix):
-    # Affiche la matrice des capacités
-    afficher_matrice(capacity_matrix, "Matrice des capacités :")
+            # Transformation en une matrice d'entiers
+            matrice_complete = [
+                [int(val) for val in line.split()]
+                for line in lines[1:]
+            ]
 
-def afficher_matrice_couts(cost_matrix):
-    # Affiche la matrice des coûts
-    afficher_matrice(cost_matrix, "Matrice des coûts :")
+            if len(matrice_complete) > n:
+                # Matrice à partir de la ligne n
+                matrice_cout = matrice_complete[n:]
 
-def afficher_table_bellman(table_bellman, predecesseurs):
-    # Affiche la table issue de l'algorithme de Bellman
-    print("Table issue de l'algorithme de Bellman :")
-    print("Noeud  Coût minimal  Prédécesseur")
-    for noeud, (cout, pred) in enumerate(zip(table_bellman, predecesseurs)):
-        # Affiche le noeud, le coût minimal et son prédécesseur
-        print(f"{noeud:<7}{cout:<14.2f}{pred:<10}")
-    print()
-
-def calculer_matrice_couts(capacity_matrix):
-    # Calcule une matrice des coûts basée sur les capacités
-    n = len(capacity_matrix)
-    cost_matrix = [[0 for _ in range(n)] for _ in range(n)]
-    for i in range(n):
-        for j in range(n):
-            if capacity_matrix[i][j] > 0:
-                cost_matrix[i][j] = round(1 / capacity_matrix[i][j], 2)  # Coût inversement proportionnel à la capacité
+                print("\nVoici la matrice des coûts :")
+                print_matrice(matrice_cout)
             else:
-                cost_matrix[i][j] = float('inf')  # Pas d'arc
-    return cost_matrix
+                print("\nPas assez de lignes pour une matrice des coûts.")
 
-def bellman(capacity_matrix, cost_matrix, source):
-    # Implémente l'algorithme de Bellman pour trouver les coûts minimaux et les prédécesseurs
-    n = len(cost_matrix)
-    table_bellman = [float('inf')] * n  # Initialisation des coûts à l'infini
-    predecesseurs = [-1] * n  # Initialisation des prédécesseurs
-    table_bellman[source] = 0
+    except Exception as e:
+        print(f"Erreur lors de la lecture ou du traitement du fichier {chemin_fichier} : {e}")
 
-    for _ in range(n - 1):  # Relaxation des arêtes pour n-1 itérations
-        for u in range(n):
-            for v in range(n):
-                if capacity_matrix[u][v] > 0 and table_bellman[u] + cost_matrix[u][v] < table_bellman[v]:
-                    table_bellman[v] = table_bellman[u] + cost_matrix[u][v]
-                    predecesseurs[v] = u
+def print_matrice(matrice):
+    # Générer les en-têtes : s, alphabet, t
+    taille = len(matrice)
+    alphabet = [chr(i) for i in range(65, 91)]  # Lettres A-Z
 
-    # Vérifie la présence de cycles de poids négatif
-    for u in range(n):
-        for v in range(n):
-            if capacity_matrix[u][v] > 0 and table_bellman[u] + cost_matrix[u][v] < table_bellman[v]:
-                raise ValueError("Le graphe contient un cycle de poids négatif.")
+    if taille < 2:
+        print("Erreur : La matrice doit avoir une taille d'au moins 2.")
+        return
 
-    return table_bellman, predecesseurs
+    if taille > len(alphabet) + 2:
+        print(f"Erreur : La taille de la matrice ({taille}) excède le nombre maximum supporté (28).")
+        return
+
+    # Construire les noms de lignes et colonnes
+    headers = ['s'] + alphabet[:taille - 2] + ['t']
+
+    # Afficher les en-têtes des colonnes
+    print("    " + " ".join(f"{h:>3}" for h in headers))
+    for i, ligne in enumerate(matrice):
+        # Afficher chaque ligne avec son nom correspondant
+        print(f"{headers[i]:>3} " + " ".join(f"{x:>3}" for x in ligne))
+
