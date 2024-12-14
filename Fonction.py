@@ -230,3 +230,113 @@ def flot_min_cout(n, capacite, cout, source, arrivee):
     print("===========================")
 
     return flot_actuel, cout_total
+
+
+import random
+import numpy as np
+import time
+import matplotlib.pyplot as plt
+
+def generate_random_flow_problem(n):
+    """
+    Génère un problème de flot aléatoire.
+    :param n: Taille du graphe (nombre de sommets).
+    :return: Deux matrices numpy C (capacités) et D (coûts).
+    """
+    # Initialiser les matrices C et D avec des zéros
+    C = np.zeros((n, n), dtype=int)
+    D = np.zeros((n, n), dtype=int)
+
+    # Nombre d'arêtes non nulles (approximativement n^2 / 2)
+    num_edges = int(n**2 / 2)
+
+    # Générer des arêtes aléatoires
+    edges = set()
+    while len(edges) < num_edges:
+        i, j = random.randint(0, n-1), random.randint(0, n-1)
+        if i != j and (i, j) not in edges:
+            edges.add((i, j))
+
+    # Remplir les matrices C et D pour les arêtes générées
+    for i, j in edges:
+        C[i][j] = random.randint(1, 100)  # Capacité entre 1 et 100
+        D[i][j] = random.randint(1, 100)  # Coût entre 1 et 100
+
+    return C, D
+
+
+def measure_execution_time(n, repetitions=100):
+    """
+    Mesure les temps d'exécution pour les algorithmes Ford-Fulkerson, poussée-réétiquetage, et flot à coût min.
+    :param n: Taille du graphe (nombre de sommets).
+    :param repetitions: Nombre de répétitions pour une taille donnée.
+    :return: Dictionnaire des temps d'exécution pour chaque algorithme.
+    """
+    times_ff = []
+    times_pr = []
+    times_min = []
+
+    for _ in range(repetitions):
+        # Générer un problème de flot aléatoire
+        C, D = generate_random_flow_problem(n)
+
+        # Mesurer le temps pour Ford-Fulkerson
+        start_time = time.time()
+        ford_fulkerson(C, 0, n-1)  # Appel à la fonction réelle
+        times_ff.append(time.time() - start_time)
+
+        # Mesurer le temps pour poussée-réétiquetage (algorithme fictif ici)
+        start_time = time.time()
+        # push_relabel(C, D)  # Remplacer par l'implémentation réelle
+        time.sleep(0.01)  # Simulation
+        times_pr.append(time.time() - start_time)
+
+        # Mesurer le temps pour flot à coût min (algorithme fictif ici)
+        start_time = time.time()
+        # min_cost_flow(C, D)  # Remplacer par l'implémentation réelle
+        time.sleep(0.01)  # Simulation
+        times_min.append(time.time() - start_time)
+
+    return {
+        "Ford-Fulkerson": times_ff,
+        "Push-Relabel": times_pr,
+        "Min-Cost Flow": times_min,
+    }
+
+def plot_execution_times(n_values, execution_times):
+    """
+    Trace les nuages de points des temps d'exécution pour chaque algorithme.
+    :param n_values: Liste des tailles de graphe (n).
+    :param execution_times: Dictionnaire des temps par algorithme.
+    """
+    for algo, times_list in execution_times.items():
+        plt.figure()
+        for i, n in enumerate(n_values):
+            plt.scatter([n] * len(times_list[i]), times_list[i], label=f"n = {n}", alpha=0.5)
+        plt.xlabel("Taille du graphe (n)")
+        plt.ylabel("Temps d'exécution (s)")
+        plt.title(f"Nuage de points pour {algo}")
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+
+def plot_worst_case(n_values, execution_times):
+    """
+    Trace les enveloppes supérieures pour chaque algorithme.
+    :param n_values: Liste des tailles de graphe (n).
+    :param execution_times: Dictionnaire des temps par algorithme.
+    """
+    for algo, times_list in execution_times.items():
+        worst_case_times = [np.max(times) for times in times_list]
+        plt.plot(n_values, worst_case_times, marker='o', label=algo)
+    plt.xlabel("Taille du graphe (n)")
+    plt.ylabel("Temps d'exécution maximal (s)")
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.title("Complexité dans le pire des cas")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
