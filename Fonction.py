@@ -44,7 +44,7 @@ def matrice_cout(chemin_fichier):
                 matrice_cout = matrice_complete[n:]
                 return matrice_cout
             else:
-                print("\nPas assez de lignes pour une matrice des coûts.")
+                print("\nIl n'y a pas de couts dans ce probleme")
                 return None
 
     except Exception as e:
@@ -53,7 +53,6 @@ def matrice_cout(chemin_fichier):
 
 def print_matrice(matrice):
     if matrice is None:
-        print("Matrice vide ou invalide.")
         return
 
     # Générer les en-têtes : s, alphabet, t
@@ -167,37 +166,42 @@ def ford_fulkerson(m_cap, sommet_initial, sommet_arrivee):
 
 # Algorithme Pousser-Réétiqueter
 
-def pousser(u, v, capacite, preflots, excedents, hauteurs):
-    """Effectue une opération "pousser" entre deux sommets."""
-    if (
-        excedents[u] > 0
-        and capacite[u][v] - preflots[u][v] > 0
-        and hauteurs[u] - hauteurs[v] == 1
-    ):
-        quantite = min(
-            excedents[u],
-            capacite[u][v] - preflots[u][v],
-        )
-        preflots[u][v] += quantite
-        preflots[v][u] -= quantite
+# Pousser
+def pousser(u, v, capacite, flot, excedents, hauteurs):
+    
+    # Si il y a de l'éxcedent
+    if (excedents[u] > 0 and capacite[u][v] - flot[u][v] > 0 and hauteurs[u] - hauteurs[v] == 1 ):
+        # quantité de flot qu'on peut pousser
+        quantite = min(excedents[u], capacite[u][v] - flot[u][v])
+        
+        # Conservation du flux
+        flot[u][v] += quantite
+        flot[v][u] -= quantite
         excedents[u] -= quantite
         excedents[v] += quantite
+        print(f"On pousse {quantite} de {u} vers {v}")
         return True
     return False
 
-def reetiqueter(u, capacite, preflots, excedents, hauteurs):
-    """Réétiquette un sommet en augmentant sa hauteur."""
+# Réétiqueter
+def reetiqueter(u, capacite, flot, excedents, hauteurs):
+    
+    # On initialise une hauteur inf (afin qu elle soit differente de 0)
     min_hauteur = float("inf")
+    
+    #chercher la hauteur min parmi tous les sommets
     for voisin in range(len(capacite[u])):
-        if capacite[u][voisin] - preflots[u][voisin] > 0:
+        if capacite[u][voisin] - flot[u][voisin] > 0:
             min_hauteur = min(min_hauteur, hauteurs[voisin])
     if excedents[u] > 0 and min_hauteur < float("inf"):
-        hauteurs[u] = min_hauteur + 1
+        hauteurs[u] = min_hauteur + 1  # on élève la hauteur de 1
         return True
+    print(f"On réétiquete le sommet {u} de hauteur {hauteurs[u]} à {min_hauteur + 1}")
     return False
 
+
 def algorithme_pousser_reetiqueter(matrice):
-    """Implémente l'algorithme pousser-réétiqueter sur une matrice de capacité."""
+    
     n = len(matrice)
     source, puits = 0, n - 1
 
@@ -205,18 +209,19 @@ def algorithme_pousser_reetiqueter(matrice):
     hauteurs = [0] * n
     hauteurs[source] = n
     excedents = [0] * n
-    preflots = [[0] * n for _ in range(n)]
+    flot = [[0] * n for _ in range(n)]
 
-    # Initialisation des pré-flots depuis la source
+    # Initialisation des flots depuis la source
     for voisin in range(n):
         if matrice[source][voisin] > 0:
-            preflots[source][voisin] = matrice[source][voisin]
-            preflots[voisin][source] = -matrice[source][voisin]
+            flot[source][voisin] = matrice[source][voisin]
+            flot[voisin][source] = -matrice[source][voisin]
             excedents[voisin] = matrice[source][voisin]
             excedents[source] -= matrice[source][voisin]
 
     # Boucle principale
     while True:
+        
         # Trouver les sommets excédentaires (hors source et puits)
         sommets_excedentaires = [
             sommet
@@ -233,18 +238,21 @@ def algorithme_pousser_reetiqueter(matrice):
         # Essayer de pousser le flot
         poussee = False
         for voisin in range(n):
-            if pousser(u, voisin, matrice, preflots, excedents, hauteurs):
+            if pousser(u, voisin, matrice, flot, excedents, hauteurs):
                 poussee = True
+                print("on pousse de ")
                 break
 
         # Si la poussée n'a pas été possible, réétiqueter
         if not poussee:
-            reetiqueter(u, matrice, preflots, excedents, hauteurs)
+            reetiqueter(u, matrice, flot, excedents, hauteurs)
 
     # Calcul du flot maximal
-    flot_maximal = sum(preflots[source][voisin] for voisin in range(n))
+    flot_maximal = sum(flot[source][voisin] for voisin in range(n))
 
-    return flot_maximal, preflots
+    return flot_maximal, flot
+
+# Affichage de la matrice des flots
 
 def afficher_resultats(flot_maximal, matrice_finale):
     """Affiche les résultats formatés comme dans l'exemple fourni."""
@@ -307,12 +315,17 @@ def flot_min_cout(n, capacite, cout, source, arrivee):
         # Limiter le flot ajouté pour ne pas dépasser le flot voulu
         flot_chemin = min(flot_chemin, flot_voulu - flot_actuel)
 
+        #Affichage de la valeur de flot potentiel
+        print(f"\nValeur de flot d’une chaîne améliorante potentiellement trouvée : {flot_chemin}")
         # Mise à jour des flots et calcul des coûts
         sommet_actuel = arrivee
         while sommet_actuel != source:
             sommet_parent = parent[sommet_actuel]
             flot[sommet_parent][sommet_actuel] += flot_chemin
             flot[sommet_actuel][sommet_parent] -= flot_chemin
+            capacite_residuelle[sommet_parent][sommet_actuel] -= flot_chemin
+            capacite_residuelle[sommet_actuel][sommet_parent] += flot_chemin
+            print(f"Arc {sommet_parent}->{sommet_actuel} : capacite_residuelle mise à jour : {capacite_residuelle[sommet_parent][sommet_actuel]}")
             cout_total += flot_chemin * cout[sommet_parent][sommet_actuel]
             sommet_actuel = sommet_parent
 
@@ -323,7 +336,7 @@ def flot_min_cout(n, capacite, cout, source, arrivee):
         flot_actuel += flot_chemin
 
     # Affichage final des résultats
-    print("\n===== Résultat final =====")
+    print("\n===== Résultat cout min =====")
     print(f"Flot total : {flot_actuel}")
     print(f"Coût total minimal : {cout_total}")
     if dernier_chemin:

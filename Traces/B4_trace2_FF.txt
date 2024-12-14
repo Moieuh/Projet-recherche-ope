@@ -1,0 +1,27 @@
+Entrer le numero du Test que vous voulez afficher : 2
+
+Il n'y a pas de couts dans ce probleme
+
+Matrice de capacité:
+      s   A   B   C   D   E   F   G   H   t
+  s   0  16   3   8   0   0   0   0   0   0
+  A   0   0   3   0   3   3   4   0   0   0
+  B   0   0   0   7   0   5   0   0   0   0
+  C   0   0   0   0   0   0   0   0   7   0
+  D   0   0   0   0   0   0   1   8   0   0
+  E   0   0   0   0   8   0   0   0   0   0
+  F   0   0   0   0   0   0   0   0   0   8
+  G   0   0   0   0   0   0   3   0   4   6
+  H   0   0   0   0   0   4   0   0   0   8
+  t   0   0   0   0   0   0   0   0   0   0
+Quel algorithme voulez-vous utiliser ?
+0 pour l'algorithme Pousser-Réétiqueter
+1 pour l'algorithme Ford-Fulkerson: 1
+
+Exécution de l'algorithme Ford-Fulkerson...
+Le flot maximum de la source 0 au puits 9 est : 20
+
+
+Voulez essayer un autre fichier?
+ oui:0
+ non:1

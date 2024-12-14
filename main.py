@@ -1,27 +1,40 @@
 from Fonction import *
-chemin = choisir_Test()
-m_cap = matrice_capaciter(chemin)
-m_cout = matrice_cout(chemin)
-print("\nMatrice de capacité:")
-print_matrice(m_cap)
-print("\nMatrice de cout:")
 
+SOURCE = 0
+r=0
+while r==0:
+    chemin = choisir_Test()
+    m_cap = matrice_capaciter(chemin)
+    m_cout = matrice_cout(chemin)
+    print("\nMatrice de capacité:")
+    print_matrice(m_cap)
 
-
-if m_cap is not None and m_cout is not None:
     n = len(m_cap)
-    source = 0  # Exemple de source, peut être modifié selon les besoins
-    arrivee =n-1 # Exemple d'arrivé, peut être modifié selon les besoins
+    arrivee = n - 1  # Exemple d'arrivée, peut être modifié selon les besoins
     flot = [[0] * n for _ in range(n)]  # Matrice de flot initiale (tout à 0)
 
-    print("\nExécution de l'algorithme de Bellman-Ford :")
-    dist, parent = bellmanford(n, source, m_cap, m_cout, flot)
-    print("\n Exécution de l'algorithme de Ford : ")
-    flot = ford_fulkerson(m_cap, source, arrivee)
-    print("Le flot maximum de la source", source, "au puits", arrivee, "est :", flot)
-    print("\nRésultats finaux :")
-    print(f"Distances : {dist}")
-    print(f"Parents   : {parent}")
+    if m_cout is not None:
+        print("\nMatrice de coût:")
+        print_matrice(m_cout)
 
-    
-    flot_min_cout(n,m_cap,m_cout,source,arrivee)
+    if m_cout is None:
+        choix = input(
+            "Quel algorithme voulez-vous utiliser ?\n"
+                "0 pour l'algorithme Pousser-Réétiqueter\n"
+                "1 pour l'algorithme Ford-Fulkerson: "
+            )
+
+        if choix == "0":
+            print("\nExécution de l'algorithme Pousser-Réétiqueter...")
+            flot_maximal, matrice_finale = algorithme_pousser_reetiqueter(m_cap)
+            afficher_resultats(flot_maximal, matrice_finale)
+        elif choix == "1":
+            print("\nExécution de l'algorithme Ford-Fulkerson...")
+            flot = ford_fulkerson(m_cap, SOURCE, arrivee)
+            print(f"Le flot maximum de la source {SOURCE} au puits {arrivee} est : {flot}")
+
+    else:
+        print("Exécution de l'algorithme flot à coût min")
+        flot_min_cout(n,m_cap,m_cout,SOURCE,arrivee)
+    print("\n")
+    r=int(input("Voulez essayer un autre fichier?\n oui:0\n non:1 "))

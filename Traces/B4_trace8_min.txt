@@ -1,0 +1,63 @@
+Entrer le numero du Test que vous voulez afficher : 8
+
+Matrice de capacité:
+      s   A   B   C   D   E   t
+  s   0  31  25  27   0   0   0
+  A   0   0  20   0  12   0   0
+  B   0   0   0   0   6   0   0
+  C   0   0  30   0   0  35   0
+  D   0   0   0   0   0   0  30
+  E   0   0  11   0  10   0  40
+  t   0   0   0   0   0   0   0
+
+Matrice de coût:
+      s   A   B   C   D   E   t
+  s   0   8   4  15   0   0   0
+  A   0   0   7   0  16   0   0
+  B   0   0   0   0   3   0   0
+  C   0   0   8   0   0  20   0
+  D   0   0   0   0   0   0  22
+  E   0   0  14   0  15   0  15
+  t   0   0   0   0   0   0   0
+Exécution de l'algorithme flot à coût min
+Entrez la valeur du flot voulu : 3
+
+===== Initialisation =====
+Distances initiales : [0, inf, inf, inf, inf, inf, inf]
+Parents initiaux   : [-1, -1, -1, -1, -1, -1, -1]
+==========================
+
+--- Itération 1 ---
+  Distances : [0, 8, 4, 15, 7, 35, 29]
+  Parents   : [-1, 0, 0, 0, 2, 3, 4]
+--- Itération 2 ---
+  Distances : [0, 8, 4, 15, 7, 35, 29]
+  Parents   : [-1, 0, 0, 0, 2, 3, 4]
+
+Aucune mise à jour effectuée. L'algorithme s'arrête ici.
+
+
+===== Résultats finaux =====
+Distances finales : [0, 8, 4, 15, 7, 35, 29]
+Parents finaux   : [-1, 0, 0, 0, 2, 3, 4]
+============================
+
+
+Valeur de flot d’une chaîne améliorante potentiellement trouvée : 3
+Arc 4->6 : capacite_residuelle mise à jour : 27
+Arc 2->4 : capacite_residuelle mise à jour : 3
+Arc 0->2 : capacite_residuelle mise à jour : 22
+
+===== Résultat cout min =====
+Flot total : 3
+Coût total minimal : 87
+Chemin final utilisé avec flots et coûts :
+Arc 0->2 : 3 unités de flot, coût par unité : 4
+Arc 2->4 : 3 unités de flot, coût par unité : 3
+Arc 4->6 : 3 unités de flot, coût par unité : 22
+===========================
+
+
+Voulez essayer un autre fichier?
+ oui:0
+ non:1

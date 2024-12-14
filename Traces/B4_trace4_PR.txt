@@ -1,0 +1,64 @@
+Entrer le numero du Test que vous voulez afficher : 4
+
+Il n'y a pas de couts dans ce probleme
+
+Matrice de capacité:
+      s   A   B   C   D   E   F   t
+  s   0   5   0   9   0   0   0   0
+  A   0   0   7   0   0   0   0   0
+  B   0   0   0   0   4   3   0   0
+  C   0   0   4   0   0   6   5   0
+  D   0   0   0   0   0   6   0   6
+  E   0   0   0   0   0   0   0   5
+  F   0   0   0   0   0   0   0   7
+  t   0   0   0   0   0   0   0   0
+Quel algorithme voulez-vous utiliser ?
+0 pour l'algorithme Pousser-Réétiqueter
+1 pour l'algorithme Ford-Fulkerson: 0
+
+Exécution de l'algorithme Pousser-Réétiqueter...
+On réétiquete le sommet 1 de hauteur 1 à 1
+On pousse 5 de 1 vers 2
+On réétiquete le sommet 2 de hauteur 1 à 1
+On pousse 4 de 2 vers 4
+On pousse 1 de 2 vers 5
+On réétiquete le sommet 3 de hauteur 1 à 1
+On pousse 6 de 3 vers 5
+On pousse 3 de 3 vers 6
+On réétiquete le sommet 4 de hauteur 1 à 1
+On pousse 4 de 4 vers 5
+On réétiquete le sommet 5 de hauteur 1 à 1
+On pousse 5 de 5 vers 7
+On réétiquete le sommet 5 de hauteur 2 à 2
+On pousse 1 de 5 vers 2
+On pousse 5 de 5 vers 3
+On réétiquete le sommet 2 de hauteur 2 à 2
+On pousse 1 de 2 vers 1
+On réétiquete le sommet 1 de hauteur 3 à 3
+On pousse 1 de 1 vers 2
+On réétiquete le sommet 2 de hauteur 3 à 3
+On pousse 1 de 2 vers 5
+On pousse 1 de 5 vers 3
+On pousse 2 de 3 vers 6
+On réétiquete le sommet 3 de hauteur 3 à 3
+On pousse 4 de 3 vers 5
+On pousse 4 de 5 vers 4
+On pousse 4 de 4 vers 7
+On réétiquete le sommet 6 de hauteur 1 à 1
+On pousse 5 de 6 vers 7
+Flot maximal: 14
+Matrice finale des flots:
+      0   1   2   3   4   5   6   7
+  0   0   5   0   9   0   0   0   0
+  1  -5   0   5   0   0   0   0   0
+  2   0  -5   0   0   4   1   0   0
+  3  -9   0   0   0   0   4   5   0
+  4   0   0  -4   0   0   0   0   4
+  5   0   0  -1  -4   0   0   0   5
+  6   0   0   0  -5   0   0   0   5
+  7   0   0   0   0  -4  -5  -5   0
+
+
+Voulez essayer un autre fichier?
+ oui:0
+ non:1
