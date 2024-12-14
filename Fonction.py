@@ -115,51 +115,64 @@ def bellmanford(n, source, capacite, cout, flot):
 
 
 
+from collections import deque
+
 def bfs(m_cap, sommet_initial, sommet_arrivee, predecesseur):  
     visités = [False] * len(m_cap)  # Marque les sommets visités
     file = deque([sommet_initial])   # File initialisée avec le sommet source
     visités[sommet_initial] = True   # Marque le sommet source comme visité
     predecesseur[sommet_initial] = -1 # Aucun prédécesseur pour le sommet source
 
+    print("\n=== BFS ===")
     while file:  # Parcourt les sommets dans la file
         sommet_courant = file.popleft()     # Défile le sommet courant
+        print(f"Sommet courant : {sommet_courant}")
         for voisin, capacité in enumerate(m_cap[sommet_courant]):  # Parcourt les voisins
-            if not visités[voisin] and capacité > 0:                # Si voisin non visité et capacité > 0
-                file.append(voisin)            # Ajoute le voisin à la file
+            if not visités[voisin] and capacité > 0:  # Si voisin non visité et capacité > 0
+                file.append(voisin)  # Ajoute le voisin à la file
                 predecesseur[voisin] = sommet_courant  # Met à jour le prédécesseur
-                visités[voisin] = True         # Marque le voisin comme visité
-                if voisin == sommet_arrivee:   # Si on atteint le puits
-                    return True                # Chemin trouvé
+                visités[voisin] = True  # Marque le voisin comme visité
+                print(f"  Voisin trouvé : {voisin}, Capacité restante : {capacité}")
+                if voisin == sommet_arrivee:  # Si on atteint le puits
+                    print("  Chemin trouvé jusqu'au puits.")
+                    return True  # Chemin trouvé
     return False  # Aucun chemin trouvé
 
 def ford_fulkerson(m_cap, sommet_initial, sommet_arrivee):  
     graphe_complementaire = [ligne[:] for ligne in m_cap]  # Copie le graphe pour capacités restantes
     predecesseur = [-1] * len(m_cap)                       # Tableau pour stocker les prédécesseurs
-    flot_max = 0                                            # Initialisation du flot maximal
+    flot_max = 0  # Initialisation du flot maximal
 
-    # Tant qu'on trouve un chemin de flux maximal dans le graphe complémentaire
     while bfs(graphe_complementaire, sommet_initial, sommet_arrivee, predecesseur):
         flot_chemin = float('Inf')  # Flot minimal sur le chemin trouvé
         sommet_actuel = sommet_arrivee
 
+        print("\n=== Calcul du flot minimal sur le chemin trouvé ===")
         # Détermine le flot minimal du chemin
         while sommet_actuel != sommet_initial:
             parent = predecesseur[sommet_actuel]  # Récupère le prédécesseur
             flot_chemin = min(flot_chemin, graphe_complementaire[parent][sommet_actuel])  # Met à jour le flot minimal
+            print(f"  Arc {parent} -> {sommet_actuel}, Capacité : {graphe_complementaire[parent][sommet_actuel]}")
             sommet_actuel = parent  # Remonte au sommet précédent
 
+        print(f"Flot minimal trouvé : {flot_chemin}")
+
         # Met à jour les capacités restantes dans le graphe complémentaire
+        print("\n=== Mise à jour des capacités résiduelles ===")
         sommet_actuel = sommet_arrivee
         while sommet_actuel != sommet_initial:
             parent = predecesseur[sommet_actuel]  # Récupère le prédécesseur
+            print(f"  Mise à jour : Arc {parent} -> {sommet_actuel}, Réduction de {flot_chemin}")
             graphe_complementaire[parent][sommet_actuel] -= flot_chemin  # Réduit la capacité dans le sens du chemin
             graphe_complementaire[sommet_actuel][parent] += flot_chemin  # Augmente la capacité dans le sens inverse
             sommet_actuel = parent  # Remonte au sommet précédent
 
         flot_max += flot_chemin  # Ajoute le flot trouvé au flot maximal total
+        print(f"Flot maximal actuel : {flot_max}")
 
+    print("\n=== Résultat final ===")
+    print(f"Flot maximum : {flot_max}")
     return flot_max  # Retourne le flot maximal
-
 
 
 
