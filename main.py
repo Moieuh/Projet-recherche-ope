@@ -7,6 +7,7 @@ print_matrice(m_cap)
 print("\nMatrice de cout:")
 print_matrice(m_cout)
 
+
 if m_cap is not None and m_cout is not None:
     n = len(m_cap)
     source = 0  # Exemple de source, peut être modifié selon les besoins
