@@ -114,67 +114,55 @@ def bellmanford(n, source, capacite, cout, flot):
 
 
 
-#voici l'algo de FF
+def bfs(graphe, sommet_initial, sommet_arrivee, predecesseur):  
+    visités = [False] * len(graphe)  # Marque les sommets visités
+    file = deque([sommet_initial])   # File initialisée avec le sommet source
+    visités[sommet_initial] = True   # Marque le sommet source comme visité
+    predecesseur[sommet_initial] = -1 # Aucun prédécesseur pour le sommet source
 
-# Algorithme de Ford-Fulkerson
-def trouver_chemin_augmentant(graphe, n, sommet_initial, sommet_arrivee, parent):
-    visités = [False] * n
-    file = deque([sommet_initial])
-    visités[sommet_initial] = True
-    parent[sommet_initial] = -1
+    while file:  # Parcourt les sommets dans la file
+        sommet_courant = file.popleft()     # Défile le sommet courant
+        for voisin, capacité in enumerate(graphe[sommet_courant]):  # Parcourt les voisins
+            if not visités[voisin] and capacité > 0:                # Si voisin non visité et capacité > 0
+                file.append(voisin)            # Ajoute le voisin à la file
+                predecesseur[voisin] = sommet_courant  # Met à jour le prédécesseur
+                visités[voisin] = True         # Marque le voisin comme visité
+                if voisin == sommet_arrivee:   # Si on atteint le puits
+                    return True                # Chemin trouvé
+    return False  # Aucun chemin trouvé
 
-    while file:
-        sommet_courant = file.popleft()
-        for next in range(n):
-            if not visités[next] and graphe[sommet_courant][next] > 0:
-                file.append(next)
-                parent[next] = sommet_courant
-                visités[next] = True
-                if next == sommet_arrivee:
-                    return True
-    return False
+def ford_fulkerson(graphe, sommet_initial, sommet_arrivee):  
+    graphe_complementaire = [ligne[:] for ligne in graphe]  # Copie le graphe pour capacités restantes
+    predecesseur = [-1] * len(graphe)                       # Tableau pour stocker les prédécesseurs
+    flot_max = 0                                            # Initialisation du flot maximal
 
-def ford_fulkerson(graphe, n, sommet_initial, sommet_arrivee):
-    graphe_complementaire = [ligne[:] for ligne in graphe]
-    parent = [-1] * n
-    flot_max = 0
-    iteration = 1
-
-    while trouver_chemin_augmentant(graphe_complementaire, n, sommet_initial, sommet_arrivee, parent):
-        flot_chemin = float('Inf')
+    # Tant qu'on trouve un chemin de flux maximal dans le graphe complémentaire
+    while bfs(graphe_complementaire, sommet_initial, sommet_arrivee, predecesseur):
+        flot_chemin = float('Inf')  # Flot minimal sur le chemin trouvé
         sommet_actuel = sommet_arrivee
 
-        # Trouver le flot minimal sur le chemin augmentant
-        chemin = []
+        # Détermine le flot minimal du chemin
         while sommet_actuel != sommet_initial:
-            parent_du_sommet = parent[sommet_actuel]
-            chemin.append((parent_du_sommet, sommet_actuel))
-            flot_chemin = min(flot_chemin, graphe_complementaire[parent_du_sommet][sommet_actuel])
-            sommet_actuel = parent_du_sommet
-        chemin.reverse()  # On remet le chemin dans le bon ordre
-        print(f"Iteration {iteration}: Chemin augmentant trouvé : {chemin} avec flot minimal {flot_chemin}")
+            parent = predecesseur[sommet_actuel]  # Récupère le prédécesseur
+            flot_chemin = min(flot_chemin, graphe_complementaire[parent][sommet_actuel])  # Met à jour le flot minimal
+            sommet_actuel = parent  # Remonte au sommet précédent
 
-        # Mettre à jour les capacités résiduelles
+        # Met à jour les capacités restantes dans le graphe complémentaire
         sommet_actuel = sommet_arrivee
         while sommet_actuel != sommet_initial:
-            parent_du_sommet = parent[sommet_actuel]
-            graphe_complementaire[parent_du_sommet][sommet_actuel] -= flot_chemin
-            graphe_complementaire[sommet_actuel][parent_du_sommet] += flot_chemin
-            sommet_actuel = parent_du_sommet
+            parent = predecesseur[sommet_actuel]  # Récupère le prédécesseur
+            graphe_complementaire[parent][sommet_actuel] -= flot_chemin  # Réduit la capacité dans le sens du chemin
+            graphe_complementaire[sommet_actuel][parent] += flot_chemin  # Augmente la capacité dans le sens inverse
+            sommet_actuel = parent  # Remonte au sommet précédent
 
-        # Mise à jour du flot maximum
-        flot_max += flot_chemin
-        print(f"Iteration {iteration}: Flot maximum mis à jour : {flot_max}")
-        iteration += 1
+        flot_max += flot_chemin  # Ajoute le flot trouvé au flot maximal total
 
-    print(f"Flot maximum final : {flot_max}")
-    return flot_max
+    return flot_max  # Retourne le flot maximal
 
 
 def flot_min_cout(n, capacite, cout, source, arrivee):
     """
-    Résout le problème de flot à coût minimal en utilisant Bellman-Ford.
-    Affiche le chemin final utilisé avec le flot et le coût par arc.
+    Résout le problème de flot à coût minimal en utilisant Bellman-Ford et F-F.
     """
     flot_voulu = int(input("Entrez la valeur du flot voulu : "))
     flot_actuel = 0
