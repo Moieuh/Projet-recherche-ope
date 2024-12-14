@@ -231,95 +231,173 @@ def flot_min_cout(n, capacite, cout, source, arrivee):
 
     return flot_actuel, cout_total
 
+def pousser(u, v, capacite, flot, excedents, hauteurs):
+    """Effectue une opération "pousser" entre deux sommets."""
+    if (
+        excedents[u] > 0
+        and capacite[u][v] - flot[u][v] > 0
+        and hauteurs[u] - hauteurs[v] == 1
+    ):
+        quantite = min(
+            excedents[u],
+            capacite[u][v] - flot[u][v],
+        )
+        flot[u][v] += quantite
+        flot[v][u] -= quantite
+        excedents[u] -= quantite
+        excedents[v] += quantite
+        print(f"On pousse {quantite} de {u} vers {v}")
+        return True
+    return False
+
+def reetiqueter(u, capacite, flot, excedents, hauteurs):
+    """Réétiquette un sommet en augmentant sa hauteur."""
+    min_hauteur = float("inf")
+    for voisin in range(len(capacite[u])):
+        if capacite[u][voisin] - flot[u][voisin] > 0:
+            min_hauteur = min(min_hauteur, hauteurs[voisin])
+    if excedents[u] > 0 and min_hauteur < float("inf"):
+        hauteurs[u] = min_hauteur + 1
+        return True
+    print(f"On réétiquete le sommet {u} de hauteur {hauteurs[u]} à {min_hauteur + 1}")
+    return False
+
+def algorithme_pousser_reetiqueter(matrice):
+    """Implémente l'algorithme pousser-réétiqueter sur une matrice de capacité."""
+    n = len(matrice)
+    source, puits = 0, n - 1
+
+    # Initialisations
+    hauteurs = [0] * n
+    hauteurs[source] = n
+    excedents = [0] * n
+    flot = [[0] * n for _ in range(n)]
+
+    # Initialisation des pré-flots depuis la source
+    for voisin in range(n):
+        if matrice[source][voisin] > 0:
+            flot[source][voisin] = matrice[source][voisin]
+            flot[voisin][source] = -matrice[source][voisin]
+            excedents[voisin] = matrice[source][voisin]
+            excedents[source] -= matrice[source][voisin]
+
+    # Boucle principale
+    while True:
+        # Trouver les sommets excédentaires (hors source et puits)
+        sommets_excedentaires = [
+            sommet
+            for sommet in range(n)
+            if excedents[sommet] > 0 and sommet != source and sommet != puits
+        ]
+
+        if not sommets_excedentaires:
+            break
+
+        # Choisir le sommet excédentaire avec la plus grande hauteur
+        u = max(sommets_excedentaires, key=lambda x: hauteurs[x])
+
+        # Essayer de pousser le flot
+        poussee = False
+        for voisin in range(n):
+            if pousser(u, voisin, matrice, flot, excedents, hauteurs):
+                poussee = True
+                print("on pousse de ")
+                break
+
+        # Si la poussée n'a pas été possible, réétiqueter
+        if not poussee:
+            reetiqueter(u, matrice, flot, excedents, hauteurs)
+
+    # Calcul du flot maximal
+    flot_maximal = sum(flot[source][voisin] for voisin in range(n))
+
+    return flot_maximal, flot
 
 import random
-import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-def generate_random_flow_problem(n):
+def generer_probleme_flots(n):
+    capacite = [[0] * n for _ in range(n)]
+    cout = [[0] * n for _ in range(n)]
 
-    # Initialiser les matrices C et D avec des zéros
-    C = np.zeros((n, n), dtype=int)
-    D = np.zeros((n, n), dtype=int)
+    # Remplir la matrice de capacité
+    for _ in range(int(n * (n - 1) / 2)):
+        i, j = random.sample(range(n), 2)
+        capacite[i][j] = random.randint(1, 100)
 
-    # Nombre d'arêtes non nulles (approximativement n^2 / 2)    
-    num_edges = int(n**2 / 2)
+    # Remplir la matrice de coût
+    for i in range(n):
+        for j in range(n):
+            if capacite[i][j] > 0:
+                cout[i][j] = random.randint(1, 100)
 
-    # Générer des arêtes aléatoires
-    edges = set()
-    while len(edges) < num_edges:
-        i, j = random.randint(0, n-1), random.randint(0, n-1)
-        if i != j and (i, j) not in edges:
-            edges.add((i, j))
+    return capacite, cout
 
-    # Remplir les matrices C et D pour les arêtes générées
-    for i, j in edges:
-        C[i][j] = random.randint(1, 100)  # Capacité entre 1 et 100
-        D[i][j] = random.randint(1, 100)  # Coût entre 1 et 100
+def mesurer_temps_execution(algorithme, *args):
+    debut = time.perf_counter()
+    algorithme(*args)
+    fin = time.perf_counter()
+    return fin - debut
 
-    return C, D
+def analyser_algorithmes(valeurs_n, repetitions=100):
+    resultats_ff = {n: [] for n in valeurs_n}
+    resultats_pr = {n: [] for n in valeurs_n}
+    resultats_min = {n: [] for n in valeurs_n}
 
+    for n in valeurs_n:
+        print(f"Analyse pour n={n}...")
+        for _ in range(repetitions):
+            capacite, cout = generer_probleme_flots(n)
+            source, puits = 0, n - 1
 
-def measure_execution_time(n, repetitions=100):
+            # Mesurer Ford-Fulkerson
+            temps_ff = mesurer_temps_execution(ford_fulkerson, capacite, source, puits)
+            resultats_ff[n].append(temps_ff)
 
-    times_ff = []
-    times_pr = []
-    times_min = []
+            # Mesurer Pousser-Réétiqueter
+            temps_pr = mesurer_temps_execution(algorithme_pousser_reetiqueter, capacite)
+            resultats_pr[n].append(temps_pr)
 
-    for _ in range(repetitions):
-        # Générer un problème de flot aléatoire
-        C, D = generate_random_flow_problem(n)
+            # Mesurer Flot à Coût Minimal
+            temps_min = mesurer_temps_execution(flot_min_cout, n, capacite, cout, source, puits)
+            resultats_min[n].append(temps_min)
 
-        # Mesurer le temps pour Ford-Fulkerson
-        start_time = time.time()
-        ford_fulkerson(C, 0, n-1)  # Appel à la fonction réelle
-        times_ff.append(time.time() - start_time)
+    return resultats_ff, resultats_pr, resultats_min
 
-        # Mesurer le temps pour poussée-réétiquetage (algorithme fictif ici)
-        start_time = time.time()
-        # push_relabel(C, D)  # Remplacer par l'implémentation réelle
-        time.sleep(0.01)  # Simulation
-        times_pr.append(time.time() - start_time)
-
-        # Mesurer le temps pour flot à coût min (algorithme fictif ici)
-        start_time = time.time()
-        # min_cost_flow(C, D)  # Remplacer par l'implémentation réelle
-        time.sleep(0.01)  # Simulation
-        times_min.append(time.time() - start_time)
-
-    return {
-        "Ford-Fulkerson": times_ff,
-        "Push-Relabel": times_pr,
-        "Min-Cost Flow": times_min,
-    }
-
-def plot_execution_times(n_values, execution_times):
-
-    for algo, times_list in execution_times.items():
-        plt.figure()
-        for i, n in enumerate(n_values):
-            plt.scatter([n] * len(times_list[i]), times_list[i], label=f"n = {n}", alpha=0.5)
-        plt.xlabel("Taille du graphe (n)")
-        plt.ylabel("Temps d'exécution (s)")
-        plt.title(f"Nuage de points pour {algo}")
-        plt.xscale('log')
-        plt.yscale('log')
-        plt.grid(True)
-        plt.legend()
-        plt.show()
-
-def plot_worst_case(n_values, execution_times):
-
-    for algo, times_list in execution_times.items():
-        worst_case_times = [np.max(times) for times in times_list]
-        plt.plot(n_values, worst_case_times, marker='o', label=algo)
-    plt.xlabel("Taille du graphe (n)")
-    plt.ylabel("Temps d'exécution maximal (s)")
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.title("Complexité dans le pire des cas")
+def tracer_nuages(resultats, titre):
+    for n, temps in resultats.items():
+        plt.scatter([n] * len(temps), temps, label=f"n={n}", alpha=0.5)
+    plt.xlabel("Nombre de sommets (n)")
+    plt.ylabel("Temps d'exécution (s)")
+    plt.title(titre)
     plt.legend()
-    plt.grid(True)
     plt.show()
+
+def tracer_enveloppes(resultats, titre):
+    enveloppes = {n: max(temps) for n, temps in resultats.items()}
+    plt.plot(enveloppes.keys(), enveloppes.values(), marker="o", label="Enveloppe supérieure")
+    plt.xlabel("Nombre de sommets (n)")
+    plt.ylabel("Temps d'exécution maximal (s)")
+    plt.title(titre)
+    plt.legend()
+    plt.show()
+
+if __name__ == "__main__":
+    # Valeurs de n à tester
+    valeurs_n = [10, 20, 40, 100, 400, 1000]
+    repetitions = 100
+
+    # Analyse des trois algorithmes
+    resultats_ff, resultats_pr, resultats_min = analyser_algorithmes(valeurs_n, repetitions)
+
+    # Tracés des nuages de points
+    tracer_nuages(resultats_ff, "Ford-Fulkerson : Nuage de points")
+    tracer_nuages(resultats_pr, "Pousser-Réétiqueter : Nuage de points")
+    tracer_nuages(resultats_min, "Flot à Coût Minimal : Nuage de points")
+
+    # Tracés des enveloppes
+    tracer_enveloppes(resultats_ff, "Ford-Fulkerson : Enveloppe supérieure")
+    tracer_enveloppes(resultats_pr, "Pousser-Réétiqueter : Enveloppe supérieure")
+    tracer_enveloppes(resultats_min, "Flot à Coût Minimal : Enveloppe supérieure")
 
