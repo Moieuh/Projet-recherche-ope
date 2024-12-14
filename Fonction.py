@@ -1,4 +1,5 @@
 from collections import deque
+
 def choisir_Test():
     # Demande à l'utilisateur de choisir un numéro de test et retourne le chemin du fichier correspondant
     x = int(input("Entrer le numero du Test que vous voulez afficher : "))
@@ -159,112 +160,107 @@ def ford_fulkerson(graphe, sommet_initial, sommet_arrivee):
     return flot_max  # Retourne le flot maximal
 
 
+
+
+
+
 # Algorithme Pousser-Réétiqueter
 
-# Initialisation
+def pousser(u, v, capacite, preflots, excedents, hauteurs):
+    """Effectue une opération "pousser" entre deux sommets."""
+    if (
+        excedents[u] > 0
+        and capacite[u][v] - preflots[u][v] > 0
+        and hauteurs[u] - hauteurs[v] == 1
+    ):
+        quantite = min(
+            excedents[u],
+            capacite[u][v] - preflots[u][v],
+        )
+        preflots[u][v] += quantite
+        preflots[v][u] -= quantite
+        excedents[u] -= quantite
+        excedents[v] += quantite
+        return True
+    return False
 
-def initialiser_matrice(matrice):
-
-    # Initialiser les hauteurs, excédents et flots à 0
-    n = len(matrice) 
-    hauteur = [0] * n 
-    excedent = [0] * n 
-    flots = [[0] * n for _ in range(n)]
-
-    source = 0              # La source est le sommet 0
-    hauteur[source] = n     # La hauteur de la source est égale au nombre de sommets
-
-    # Initialiser les flots sortant de la source
-    for v in range(n):
-        if matrice[source][v] > 0:
-            flots[source][v] = matrice[source][v] 
-            excedent[v] += matrice[source][v] 
-            excedent[source] -= matrice[source][v] 
-
-    return hauteur, excedent, flots
-
-# Pousser
-
-def pousser(u, v, matrice, flots, excedent):
-
-    # Calcul de la capacité résiduelle
-    capacite_residuelle = matrice[u][v] - flots[u][v]
-
-    # Calcul du flot à pousser (le minimum entre l'excédent de u et la capacité résiduelle)
-    flux = min(excedent[u], capacite_residuelle)
-
-    # Mise à jour des flots et des excédants
-    flots[u][v] += flux
-    flots[v][u] -= flux
-    excedent[u] -= flux
-    excedent[v] += flux
-
-# Réétiqueter 
-
-def reetiqueter(u, matrice, flots, hauteur):
-
-    n = len(matrice)
-    hauteur_min = float('inf')
-
-    # Trouver la hauteur minimale parmi les voisins accessibles
-    for v in range(n):
-        if matrice[u][v] - flots[u][v] > 0:  # Capacité résiduelle positive
-            hauteur_min = min(hauteur_min, hauteur[v])
-
-    # Mettre à jour la hauteur de u
-    if hauteur_min < float('inf'):
-        hauteur[u] = hauteur_min + 1
-
-# Réalisation de l'algorithme pousser-réétiqueter
-
-
+def reetiqueter(u, capacite, preflots, excedents, hauteurs):
+    """Réétiquette un sommet en augmentant sa hauteur."""
+    min_hauteur = float("inf")
+    for voisin in range(len(capacite[u])):
+        if capacite[u][voisin] - preflots[u][voisin] > 0:
+            min_hauteur = min(min_hauteur, hauteurs[voisin])
+    if excedents[u] > 0 and min_hauteur < float("inf"):
+        hauteurs[u] = min_hauteur + 1
+        return True
+    return False
 
 def algorithme_pousser_reetiqueter(matrice):
+    """Implémente l'algorithme pousser-réétiqueter sur une matrice de capacité."""
+    taille = len(matrice)
+    source, puits = 0, taille - 1
 
-    n = len(matrice)    # Nombre de sommets
-    source = 0
-    puits = n - 1
+    # Initialisations
+    hauteurs = [0] * taille
+    hauteurs[source] = taille
+    excedents = [0] * taille
+    preflots = [[0] * taille for _ in range(taille)]
 
-    # Initialisation
-    hauteur, excedent, flots = initialiser_matrice(matrice)
+    # Initialisation des pré-flots depuis la source
+    for voisin in range(taille):
+        if matrice[source][voisin] > 0:
+            preflots[source][voisin] = matrice[source][voisin]
+            preflots[voisin][source] = -matrice[source][voisin]
+            excedents[voisin] = matrice[source][voisin]
+            excedents[source] -= matrice[source][voisin]
 
-    # Liste des sommets excédentaires (hors source et puits)
-    sommets_excedentaires = [i for i in range(n) if i != source and i != puits and excedent[i] > 0]
+    # Boucle principale
+    while True:
+        # Trouver les sommets excédentaires (hors source et puits)
+        sommets_excedentaires = [
+            sommet
+            for sommet in range(taille)
+            if excedents[sommet] > 0 and sommet != source and sommet != puits
+        ]
 
-    while sommets_excedentaires:
-        
-        # Trier les sommets excédentaires par priorité : hauteur décroissante puis indice croissant
-        sommets_excedentaires.sort(key=lambda x: (-hauteur[x], x))
-        u = sommets_excedentaires.pop(0)    # Prendre le sommet avec la plus grande priorité
-        action_effectuee = False
+        if not sommets_excedentaires:
+            break
 
-        # Obtenir les voisins triés avec priorité pour pousser
-        voisins = list(range(n))
-        voisins.sort(key=lambda v: (v != puits, v))     # Priorité des opérations dans l’algorithme Pousser-réétiqueter
+        # Choisir le sommet excédentaire avec la plus grande hauteur
+        u = max(sommets_excedentaires, key=lambda x: hauteurs[x])
 
-        # Pousser le flot vers les voisins si possible
-        for v in voisins:
-            if matrice[u][v] - flots[u][v] > 0 and hauteur[u] == hauteurs[v]+1:     # Capacité résiduelle et condition de hauteur
-                pousser_matrice(u, v, matrice, flots, excedent)
-                action_effectuee = True
+        # Essayer de pousser le flot
+        poussee = False
+        for voisin in range(taille):
+            if pousser(u, voisin, matrice, preflots, excedents, hauteurs):
+                poussee = True
+                break
 
-                # Ajouter v aux sommets excédentaires s'il devient excédentaire
-                if excedent[v] > 0 and v not in sommets_excedentaires and v != source and v != puits:
-                    sommets_excedentaires.append(v)
-                break # Sortie de la boucle
+        # Si la poussée n'a pas été possible, réétiqueter
+        if not poussee:
+            reetiqueter(u, matrice, preflots, excedents, hauteurs)
 
-        # Réétiqueter si aucune poussée n'est possible
-        if not action_effectuee:
-            reetiqueter_matrice(u, matrice, flots, hauteur)
+    # Calcul du flot maximal
+    flot_maximal = sum(preflots[source][voisin] for voisin in range(taille))
 
-        
+    return flot_maximal, preflots
+
+def afficher_resultats(flot_maximal, matrice_finale):
+    """Affiche les résultats formatés comme dans l'exemple fourni."""
+    print("Flot maximal:", flot_maximal)
+    print("Matrice finale des flots:")
+    print("   ", " ".join(f"{i:>3}" for i in range(len(matrice_finale))))
+    for i, ligne in enumerate(matrice_finale):
+        print(f"{i:>3}", " ".join(f"{val:>3}" for val in ligne))
 
 
-    # Calculer le flot maximal
-    flot_max = sum(flots[source][v] for v in range(n))
 
-    #affichage de la valeur maximale du flot et de la matrice des flots
-    return flot_max, flots
+
+
+
+
+
+
 
 # Algorithme pour résoudre le flot à coût minimal.
 
