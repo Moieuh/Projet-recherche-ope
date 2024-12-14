@@ -114,15 +114,15 @@ def bellmanford(n, source, capacite, cout, flot):
 
 
 
-def bfs(graphe, sommet_initial, sommet_arrivee, predecesseur):  
-    visités = [False] * len(graphe)  # Marque les sommets visités
+def bfs(m_cap, sommet_initial, sommet_arrivee, predecesseur):  
+    visités = [False] * len(m_cap)  # Marque les sommets visités
     file = deque([sommet_initial])   # File initialisée avec le sommet source
     visités[sommet_initial] = True   # Marque le sommet source comme visité
     predecesseur[sommet_initial] = -1 # Aucun prédécesseur pour le sommet source
 
     while file:  # Parcourt les sommets dans la file
         sommet_courant = file.popleft()     # Défile le sommet courant
-        for voisin, capacité in enumerate(graphe[sommet_courant]):  # Parcourt les voisins
+        for voisin, capacité in enumerate(m_cap[sommet_courant]):  # Parcourt les voisins
             if not visités[voisin] and capacité > 0:                # Si voisin non visité et capacité > 0
                 file.append(voisin)            # Ajoute le voisin à la file
                 predecesseur[voisin] = sommet_courant  # Met à jour le prédécesseur
@@ -131,9 +131,9 @@ def bfs(graphe, sommet_initial, sommet_arrivee, predecesseur):
                     return True                # Chemin trouvé
     return False  # Aucun chemin trouvé
 
-def ford_fulkerson(graphe, sommet_initial, sommet_arrivee):  
-    graphe_complementaire = [ligne[:] for ligne in graphe]  # Copie le graphe pour capacités restantes
-    predecesseur = [-1] * len(graphe)                       # Tableau pour stocker les prédécesseurs
+def ford_fulkerson(m_cap, sommet_initial, sommet_arrivee):  
+    graphe_complementaire = [ligne[:] for ligne in m_cap]  # Copie le graphe pour capacités restantes
+    predecesseur = [-1] * len(m_cap)                       # Tableau pour stocker les prédécesseurs
     flot_max = 0                                            # Initialisation du flot maximal
 
     # Tant qu'on trouve un chemin de flux maximal dans le graphe complémentaire
