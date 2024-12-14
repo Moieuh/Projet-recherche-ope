@@ -238,16 +238,12 @@ import time
 import matplotlib.pyplot as plt
 
 def generate_random_flow_problem(n):
-    """
-    Génère un problème de flot aléatoire.
-    :param n: Taille du graphe (nombre de sommets).
-    :return: Deux matrices numpy C (capacités) et D (coûts).
-    """
+
     # Initialiser les matrices C et D avec des zéros
     C = np.zeros((n, n), dtype=int)
     D = np.zeros((n, n), dtype=int)
 
-    # Nombre d'arêtes non nulles (approximativement n^2 / 2)
+    # Nombre d'arêtes non nulles (approximativement n^2 / 2)    
     num_edges = int(n**2 / 2)
 
     # Générer des arêtes aléatoires
@@ -266,12 +262,7 @@ def generate_random_flow_problem(n):
 
 
 def measure_execution_time(n, repetitions=100):
-    """
-    Mesure les temps d'exécution pour les algorithmes Ford-Fulkerson, poussée-réétiquetage, et flot à coût min.
-    :param n: Taille du graphe (nombre de sommets).
-    :param repetitions: Nombre de répétitions pour une taille donnée.
-    :return: Dictionnaire des temps d'exécution pour chaque algorithme.
-    """
+
     times_ff = []
     times_pr = []
     times_min = []
@@ -304,11 +295,7 @@ def measure_execution_time(n, repetitions=100):
     }
 
 def plot_execution_times(n_values, execution_times):
-    """
-    Trace les nuages de points des temps d'exécution pour chaque algorithme.
-    :param n_values: Liste des tailles de graphe (n).
-    :param execution_times: Dictionnaire des temps par algorithme.
-    """
+
     for algo, times_list in execution_times.items():
         plt.figure()
         for i, n in enumerate(n_values):
@@ -323,11 +310,7 @@ def plot_execution_times(n_values, execution_times):
         plt.show()
 
 def plot_worst_case(n_values, execution_times):
-    """
-    Trace les enveloppes supérieures pour chaque algorithme.
-    :param n_values: Liste des tailles de graphe (n).
-    :param execution_times: Dictionnaire des temps par algorithme.
-    """
+
     for algo, times_list in execution_times.items():
         worst_case_times = [np.max(times) for times in times_list]
         plt.plot(n_values, worst_case_times, marker='o', label=algo)
