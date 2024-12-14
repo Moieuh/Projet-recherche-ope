@@ -197,17 +197,17 @@ def reetiqueter(u, capacite, preflots, excedents, hauteurs):
 
 def algorithme_pousser_reetiqueter(matrice):
     """Implémente l'algorithme pousser-réétiqueter sur une matrice de capacité."""
-    taille = len(matrice)
-    source, puits = 0, taille - 1
+    n = len(matrice)
+    source, puits = 0, n - 1
 
     # Initialisations
-    hauteurs = [0] * taille
-    hauteurs[source] = taille
-    excedents = [0] * taille
-    preflots = [[0] * taille for _ in range(taille)]
+    hauteurs = [0] * n
+    hauteurs[source] = n
+    excedents = [0] * n
+    preflots = [[0] * n for _ in range(n)]
 
     # Initialisation des pré-flots depuis la source
-    for voisin in range(taille):
+    for voisin in range(n):
         if matrice[source][voisin] > 0:
             preflots[source][voisin] = matrice[source][voisin]
             preflots[voisin][source] = -matrice[source][voisin]
@@ -219,7 +219,7 @@ def algorithme_pousser_reetiqueter(matrice):
         # Trouver les sommets excédentaires (hors source et puits)
         sommets_excedentaires = [
             sommet
-            for sommet in range(taille)
+            for sommet in range(n)
             if excedents[sommet] > 0 and sommet != source and sommet != puits
         ]
 
@@ -231,7 +231,7 @@ def algorithme_pousser_reetiqueter(matrice):
 
         # Essayer de pousser le flot
         poussee = False
-        for voisin in range(taille):
+        for voisin in range(n):
             if pousser(u, voisin, matrice, preflots, excedents, hauteurs):
                 poussee = True
                 break
@@ -241,7 +241,7 @@ def algorithme_pousser_reetiqueter(matrice):
             reetiqueter(u, matrice, preflots, excedents, hauteurs)
 
     # Calcul du flot maximal
-    flot_maximal = sum(preflots[source][voisin] for voisin in range(taille))
+    flot_maximal = sum(preflots[source][voisin] for voisin in range(n))
 
     return flot_maximal, preflots
 
