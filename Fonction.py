@@ -1,3 +1,4 @@
+from collections import deque
 def choisir_Test():
     # Demande à l'utilisateur de choisir un numéro de test et retourne le chemin du fichier correspondant
     x = int(input("Entrer le numero du Test que vous voulez afficher : "))
@@ -92,7 +93,7 @@ def bellmanford(n, source, capacite, cout, flot):
 
         for u in range(n):
             for v in range(n):
-                if capacite[u][v] > 0 and dist[u] + cout[u][v] < dist[v]:
+                if capacite[u][v]-flot[u][v] > 0 and dist[u] + cout[u][v] < dist[v]:
                     dist[v] = dist[u] + cout[u][v]
                     parent[v] = u
                     updated = True
@@ -110,3 +111,134 @@ def bellmanford(n, source, capacite, cout, flot):
     print("============================\n")
 
     return dist, parent
+
+
+
+#voici l'algo de FF
+
+# Algorithme de Ford-Fulkerson
+def trouver_chemin_augmentant(graphe, n, sommet_initial, sommet_arrivee, parent):
+    visités = [False] * n
+    file = deque([sommet_initial])
+    visités[sommet_initial] = True
+    parent[sommet_initial] = -1
+
+    while file:
+        sommet_courant = file.popleft()
+        for next in range(n):
+            if not visités[next] and graphe[sommet_courant][next] > 0:
+                file.append(next)
+                parent[next] = sommet_courant
+                visités[next] = True
+                if next == sommet_arrivee:
+                    return True
+    return False
+
+def ford_fulkerson(graphe, n, sommet_initial, sommet_arrivee):
+    graphe_complementaire = [ligne[:] for ligne in graphe]
+    parent = [-1] * n
+    flot_max = 0
+    iteration = 1
+
+    while trouver_chemin_augmentant(graphe_complementaire, n, sommet_initial, sommet_arrivee, parent):
+        flot_chemin = float('Inf')
+        sommet_actuel = sommet_arrivee
+
+        # Trouver le flot minimal sur le chemin augmentant
+        chemin = []
+        while sommet_actuel != sommet_initial:
+            parent_du_sommet = parent[sommet_actuel]
+            chemin.append((parent_du_sommet, sommet_actuel))
+            flot_chemin = min(flot_chemin, graphe_complementaire[parent_du_sommet][sommet_actuel])
+            sommet_actuel = parent_du_sommet
+        chemin.reverse()  # On remet le chemin dans le bon ordre
+        print(f"Iteration {iteration}: Chemin augmentant trouvé : {chemin} avec flot minimal {flot_chemin}")
+
+        # Mettre à jour les capacités résiduelles
+        sommet_actuel = sommet_arrivee
+        while sommet_actuel != sommet_initial:
+            parent_du_sommet = parent[sommet_actuel]
+            graphe_complementaire[parent_du_sommet][sommet_actuel] -= flot_chemin
+            graphe_complementaire[sommet_actuel][parent_du_sommet] += flot_chemin
+            sommet_actuel = parent_du_sommet
+
+        # Mise à jour du flot maximum
+        flot_max += flot_chemin
+        print(f"Iteration {iteration}: Flot maximum mis à jour : {flot_max}")
+        iteration += 1
+
+    print(f"Flot maximum final : {flot_max}")
+    return flot_max
+
+
+def flot_min_cout(n, capacite, cout, source, arrivee):
+    """
+    Résout le problème de flot à coût minimal en utilisant Bellman-Ford.
+    Affiche le chemin final utilisé avec le flot et le coût par arc.
+    """
+    flot_voulu = int(input("Entrez la valeur du flot voulu : "))
+    flot_actuel = 0
+    cout_total = 0
+    dernier_chemin = []  # Stocke uniquement le dernier chemin trouvé
+    flot_par_arc = []  # Stocke le flot final par arc dans le chemin
+    flot = [[0] * n for _ in range(n)]  # Suivre le flot
+    capacite_residuelle = [ligne[:] for ligne in capacite]  # Copie des capacités
+
+    while flot_actuel < flot_voulu:
+        # Utilisation de Bellman-Ford pour trouver le chemin de coût minimal
+        dist, parent = bellmanford(n, source, capacite_residuelle, cout, flot)
+
+        # Vérifier si aucun chemin n'existe
+        if dist[arrivee] == float('inf'):
+            print("Aucun chemin disponible pour atteindre le flot voulu.")
+            break
+
+        # Reconstruction du chemin depuis la table parent
+        chemin = []
+        sommet_actuel = arrivee
+        while sommet_actuel != source:
+            sommet_parent = parent[sommet_actuel]
+            chemin.append((sommet_parent, sommet_actuel))
+            sommet_actuel = sommet_parent
+        chemin.reverse()
+        dernier_chemin = chemin  # Stocker uniquement le chemin actuel
+
+        # Recherche du flot minimal sur le chemin trouvé
+        flot_chemin = float('inf')
+        sommet_actuel = arrivee
+        while sommet_actuel != source:
+            sommet_parent = parent[sommet_actuel]
+            flot_chemin = min(flot_chemin, capacite[sommet_parent][sommet_actuel] - flot[sommet_parent][sommet_actuel])
+            sommet_actuel = sommet_parent
+
+        # Limiter le flot ajouté pour ne pas dépasser le flot voulu
+        flot_chemin = min(flot_chemin, flot_voulu - flot_actuel)
+
+        # Mise à jour des flots et calcul des coûts
+        sommet_actuel = arrivee
+        while sommet_actuel != source:
+            sommet_parent = parent[sommet_actuel]
+            flot[sommet_parent][sommet_actuel] += flot_chemin
+            flot[sommet_actuel][sommet_parent] -= flot_chemin
+            cout_total += flot_chemin * cout[sommet_parent][sommet_actuel]
+            sommet_actuel = sommet_parent
+
+        # Mise à jour des valeurs pour le chemin final (flot et coût)
+        flot_par_arc = [(u, v, flot[u][v], cout[u][v]) for u, v in dernier_chemin]
+
+        # Mise à jour du flot total
+        flot_actuel += flot_chemin
+
+    # Affichage final des résultats
+    print("\n===== Résultat final =====")
+    print(f"Flot total : {flot_actuel}")
+    print(f"Coût total minimal : {cout_total}")
+    if dernier_chemin:
+        print("Chemin final utilisé avec flots et coûts :")
+        for u, v, f, c in flot_par_arc:
+            print(f"Arc {u}->{v} : {f} unités de flot, coût par unité : {c}")
+    else:
+        print("Aucun chemin n'a été trouvé.")
+    print("===========================")
+
+    return flot_actuel, cout_total
